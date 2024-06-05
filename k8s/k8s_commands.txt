@@ -1,0 +1,90 @@
+kubectl get secret admin-user -n kube-system -ojsonpath='{.data.token}' | base64 --decode
+
+kubectl get pods -A | grep ingress
+
+kubectl -n ingress get configmap
+
+kubectl -n ingress edit configmaps nginx-load-balancer-microk8s-conf
+
+Navigate around the file and add the following section under the kind: ConfigMap line:
+data:
+  use-forwarded-headers: "true"
+
+kubectl -n ingress logs nginx-ingress-microk8s-controller-8xqzv
+
+kubectl apply -f helloworld.yaml
+
+kubectl get pods -n default
+
+kubectl get services -n default
+
+kubectl delete deployment hello-world-deployment
+
+kubectl get all --selector app=[app-label]
+
+kubectl delete svc [service-name]
+
+kubectl delete rs [replicaset-name]
+
+kubectl delete configmap [configmap-name]
+
+kubectl delete secret [secret-name]
+
+kubectl delete ingress [ingress-name]
+
+kubectl get node -o wide
+
+kubectl apply -f helloworld.yaml
+
+
+ 
+microk8s enable ingress metallb
+
+kubectl -n ingress get svc
+
+kubectl apply -f ingress-service.yaml
+
+curl -H "Host: my-local-microk8s.local.com" http://192.168.2.120/hello
+
+curl -H "Host: my-local-microk8s.local.com" http://192.168.2.120/hello/
+
+curl -H "Host: api.myothersite.net" http://<<LOAD BALANCER IP HERE>>/service2/hello
+curl -H "Host: api.myothersite.net" http://<<LOAD BALANCER IP HERE>>/service3/hello
+
+
+
+kubectl create serviceaccount admin-user -n kube-system
+kubectl -n kube-system get sa admin-user -o yaml
+
+kubectl apply -f - <<EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: admin-user
+  namespace: kube-system
+  annotations:
+    kubernetes.io/service-account.name: admin-user
+type: kubernetes.io/service-account-token
+EOF
+
+kubectl create clusterrolebinding admin-user --clusterrole cluster-admin --serviceaccount kube-system:admin-user
+
+kubectl get clusterrolebinding admin-user -n kube-system
+
+kubectl get secret admin-user -n kube-system -ojsonpath='{.data.token}' | base64 --decode
+
+
+kubectl get secret --namespace default redis -o jsonpath="{.data.redis-password}" | base64 -d
+
+
+
+docker build -t ndigrazia/dapr-example:1.0.0 node
+docker push ndigrazia/dapr-example:1.0.0
+kubectl apply -f node.yaml
+
+curl --request POST --data "@sample.json" -H "Host: dapr-local-microk8s.local.com" -H "Content-Type: application/json" http://192.168.2.120/dapr/neworder
+curl -H "Host: dapr-local-microk8s.local.com" -H "Content-Type: application/json" http://192.168.2.120/dapr/order
+
+
+
+
