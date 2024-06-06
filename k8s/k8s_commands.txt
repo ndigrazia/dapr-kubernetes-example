@@ -86,5 +86,22 @@ curl --request POST --data "@sample.json" -H "Host: dapr-local-microk8s.local.co
 curl -H "Host: dapr-local-microk8s.local.com" -H "Content-Type: application/json" http://192.168.2.120/dapr/order
 
 
+helm repo add dapr https://dapr.github.io/helm-charts/
+helm repo update
+helm search repo dapr --devel --versions
+helm upgrade --install dapr dapr/dapr --version=1.13.4 --namespace dapr-system --create-namespace --wait
+helm install dapr-dashboard dapr/dapr-dashboard --namespace dapr-system
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm install redis bitnami/redis -n default
+helm uninstall dapr --namespace dapr-system
 
+helm repo add kedacore https://kedacore.github.io/charts
+helm repo update
+helm install keda kedacore/keda  --version 2.12.0 --namespace keda --create-namespace
+helm uninstall keda -n keda
+
+watch -n2 "kubectl get pods"
+
+
+kubectl exec -it <pod-name> top
 
