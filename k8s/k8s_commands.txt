@@ -105,3 +105,19 @@ watch -n2 "kubectl get pods"
 
 kubectl exec -it <pod-name> top
 
+kubectl top pod --all-namespaces
+
+kubectl get services -n observability
+
+kubectl get pods -n observability
+
+kubectl port-forward -n observability service/prometheus-operated --address 0.0.0.0 9090:9090
+kubectl port-forward -n observability service/kube-prom-stack-grafana --address 0.0.0.0 3000:80
+
+Observability has been enabled (user/pass: admin/prom-operator)
+
+
+
+
+
+
