@@ -117,7 +117,26 @@ kubectl port-forward -n observability service/kube-prom-stack-grafana --address 
 Observability has been enabled (user/pass: admin/prom-operator)
 
 
+curl --request GET -H "Content-Type: application/json" http://localhost:8080/hello
+
+curl --request GET -H "Content-Type: application/json" http://localhost:8080/hello/greeting/nelson
 
 
+QUARKUS
 
+Using a Dockerfile
+
+ ./mvnw compile quarkus:dev -Dmessage=Hallo
+
+./mvnw clean package
+docker build -f src/main/docker/Dockerfile.jvm -t ndigrazia/quarkus-demo:1.0.0 .
+docker image ls
+docker push ndigrazia/quarkus-demo:1.0.0
+docker run --env GREETING_MESSAGE=Hola --env GREETING_SUFFIX=i --rm -d -p 8080:8080 ndigrazia/quarkus-demo:1.0.0
+docker run -v $(pwd)/config/application.properties:/deployments/config/application.properties --rm -d -p 8080:8080 ndigrazia/quarkus-demo:1.0.0
+kubectl apply -f quarkus/quarkus.yaml
+
+docker exec -ti container_name /bin/bash
+
+curl --request GET -H "Host: quarkus-local-microk8s.local.com" -H "Content-Type: application/json" http://192.168.2.120/quarkus/hello/greeting/nelson
 
