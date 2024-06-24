@@ -1,0 +1,152 @@
+objetos:
+- kind: Component
+  apiVersion: dapr.io/v1alpha1
+  metadata:
+    name: mycustomsecretstore
+  spec:
+    metadata:
+    - name: defaultNamespace
+      value: dapr-secrets
+    type: secretstores.kubernetes
+    version: v1
+- kind: Component
+  apiVersion: dapr.io/v1alpha1
+  metadata:
+    name: redis-pubsub
+  spec:
+    metadata:
+    - name: redisHost
+      value: my-redis-headless.default.svc.cluster.local:6379
+    - name: redisPassword
+      secretKeyRef:
+        key: redispass
+        name: redispass
+    - name: enableTLS
+      value: 'false'
+    - name: allowedTopics
+      value: topico,topico1
+    - name: publishingScopes
+      value: servicio2=topico
+    type: pubsub.redis
+    version: v1
+- kind: Component
+  apiVersion: dapr.io/v1alpha1
+  metadata:
+    name: redis-pubsub-broadcast
+  spec:
+    metadata:
+    - name: redisHost
+      value: my-redis-headless.default.svc.cluster.local:6379
+    - name: redisPassword
+      secretKeyRef:
+        key: redispass
+        name: redispass
+    - name: enableTLS
+      value: 'false'
+    - name: allowedTopics
+      value: topico-broadcast
+    - name: publishingScopes
+      value: servicio1=topico-broadcast
+    - name: subscriptionScopes
+      value: servicio1=topico-broadcast;servicio2=topico-broadcast;servicio3=topico-broadcast
+    - name: consumerID
+      value: "{podName}"
+    type: pubsub.redis
+    version: v1
+- kind: Component
+  apiVersion: dapr.io/v1alpha1
+  metadata:
+    name: statestore
+  auth:
+    secretStore: mycustomsecretstore
+  scopes:
+  - servicio3
+  spec:
+    metadata:
+    - name: redisHost
+      value: my-redis-headless.default.svc.cluster.local:6379
+    - name: redisPassword
+      secretKeyRef:
+        key: redispass
+        name: redispass
+    type: state.redis
+    version: v1
+- kind: Component
+  apiVersion: dapr.io/v1alpha1
+  metadata:
+    name: statestore2
+  scopes:
+  - servicio2
+  spec:
+    metadata:
+    - name: host
+      value: my-mongo-mongodb.my-mongo.svc.cluster.local:27017
+    - name: username
+      value: root
+    - name: password
+      value: OQOnBpypnG
+    - name: params
+      value: "?authSource=admin"
+    type: state.mongodb
+    version: v1
+- kind: Configuration
+  apiVersion: dapr.io/v1alpha1
+  metadata:
+    name: dapr-config
+  spec:
+    metric:
+      enabled: true
+    metrics:
+      enabled: true
+    tracing:
+      samplingRate: '1'
+      zipkin:
+        endpointAddress: http://zipkin-1709923200.default.svc.cluster.local:9411/api/v2/spans
+- kind: Resiliency
+  apiVersion: dapr.io/v1alpha1
+  metadata:
+    name: redis-pubsub-resiliency
+  spec:
+    policies:
+      retries:
+        pubsubRetry:
+          duration: 5s
+          maxRetries: 3
+          policy: constant
+    targets:
+      components:
+        redis-pubsub:
+          inbound:
+            retry: pubsubRetry
+          outbound:
+            retry: pubsubRetry
+        redis-pubsub-broadcast:
+          inbound:
+            retry: pubsubRetry
+          outbound:
+            retry: pubsubRetry
+- kind: Subscription
+  apiVersion: dapr.io/v2alpha1
+  metadata:
+    name: broadcast-pub-sub
+  scopes:
+  - servicio1
+  - servicio2
+  spec:
+    deadLetterTopic: deadLetterBroadcast
+    pubsubname: redis-pubsub-broadcast
+    routes:
+      default: "/broadcast"
+    topic: topico-broadcast
+- kind: Subscription
+  apiVersion: dapr.io/v2alpha1
+  metadata:
+    name: order-pub-sub
+  scopes:
+  - servicio3_inex
+  spec:
+    deadLetterTopic: deadLetter1
+    pubsubname: redis-pubsub
+    routes:
+      default: "/api/test"
+    topic: topico
